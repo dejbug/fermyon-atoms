@@ -1,0 +1,21 @@
+spin_manifest_version = "1"
+authors = ["Dejan Budimir <dejbug@users.noreply.github.com>"]
+description = "RSS feed for sites that don't provide one"
+name = "feeder"
+trigger = { type = "http", base = "/" }
+version = "0.1.0"
+
+[[component]]
+id = "ibtimes"
+source = "ibt.wasm"
+environment = { RATE = "3600" }
+key_value_stores = ["default"]
+files = [ { source = "cache/", destination = "/" } ]
+allowed_http_hosts = [ "https://www.ibtimes.com" ]
+
+[component.trigger]
+route = "/ibtimes"
+
+[component.build]
+command = "spin py2wasm ibt -o ibt.wasm"
+watch = ["ibt.py", "Store.py", "fetch.py", "abs.py", "Pipfile"]
