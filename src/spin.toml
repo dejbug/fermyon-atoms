@@ -1,9 +1,9 @@
 spin_manifest_version = "1"
 authors = ["Dejan Budimir <dejbug@users.noreply.github.com>"]
-description = "RSS feed for sites that don't provide one"
-name = "feeder"
+description = "Syndication for sites that don't provide it."
+name = "atoms2"
 trigger = { type = "http", base = "/" }
-version = "0.1.0"
+version = "0.1.1"
 
 [[component]]
 id = "ibtimes"

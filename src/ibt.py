@@ -99,7 +99,7 @@ def rss(text, file=sys.stdout):
 
 	file.write('<rss version="0.91">\n\t<channel>\n')
 	file.write('\t\t<title>IBT</title>\n')
-	file.write('\t\t<link>%s</link>\n' % URL)
+	file.write(f'\t\t<link>{URL}</link>\n')
 	file.write('\t\t<description>RSS Feed of the International Business Times</description>\n')
 	file.write('\t\t<language>en-us</language>\n')
 	file.write('\t\t<copyright>Copyright 2023 IBTimes LLC. All Rights Reserved</copyright>\n')
@@ -120,13 +120,49 @@ def rss(text, file=sys.stdout):
 	file.write('\t</channel>\n</rss>\n')
 
 
+def atom(text, file=sys.stdout):
+	dt = datetime.datetime.now(datetime.timezone.utc)
+	updated = f'<updated>{dt:%Y-%m-%dT%H:%M:%S}Z</updated>'
+
+	file.write('<?xml version="1.0" encoding="utf-8"?>\n')
+	file.write('\t<feed xmlns="http://www.w3.org/2005/Atom">\n')
+	file.write('\t\t<title>IBT</title>\n')
+	file.write(f'\t\t<link href="{URL}"/>\n')
+	file.write(f'\t\t{updated}\n')
+	file.write('\t\t<author>\n')
+	#~ file.write('\t\t\t<name>Dejan Budimir</name>\n')
+	#~ file.write('\t\t\t<uri>https://github.com/dejbug</uri>\n')
+	file.write('\t\t\t<name>International Business Times</name>\n')
+	file.write(f'\t\t\t<uri>{URL}</uri>\n')
+	file.write('\t\t</author>\n')
+	file.write(f'\t\t<rights>Copyright 2023 IBTimes LLC. All Rights Reserved</rights>\n')
+	file.write(f'\t\t<id>{URL}</id>\n')
+	for block in ArticleBlock.iter(text):
+		headline = Headline.from_article_items(ArticleItem.iter(block))
+		file.write('\t\t\t<entry>\n')
+		title = headline.title
+		file.write(f'\t\t\t\t<title>{title.text}</title>\n')
+		if title.type == "href":
+			file.write(f'\t\t\t\t<link href="{title.link}"/>\n')
+			file.write(f'\t\t\t\t<id>{title.link}</id>\n')
+		if headline.summary:
+			file.write(f'\t\t\t\t<summary>{headline.summary}</summary>\n')
+		file.write(f'\t\t\t\t{updated}\n')
+		#~ file.write('\t\t\t\t<author>\n')
+		#~ file.write('\t\t\t\t\t<name>International Business Times</name>\n')
+		#~ file.write(f'\t\t\t\t\t<uri>{URL}</uri>\n')
+		#~ file.write('\t\t\t\t</author>\n')
+		file.write('\t\t\t</entry>\n')
+	file.write('\t</feed>\n')
+
+
 def normalize_link(text):
 	return "https://www.ibtimes.com" + text if text.startswith("/") else text
 
 
 def parse(text):
 	buffer = io.StringIO()
-	rss(text, buffer)
+	atom(text, buffer)
 	return buffer.getvalue()
 
 
@@ -144,7 +180,9 @@ def load():
 
 
 def main():
-	rss = load()
+	#~ rss = load()
+	with open("cache/ibtimes.com.html") as file:
+		rss = parse(file.read())
 	print(rss)
 
 
