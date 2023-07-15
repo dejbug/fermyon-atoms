@@ -180,9 +180,8 @@ def load():
 
 
 def main():
-	#~ rss = load()
-	with open("cache/ibtimes.com.html") as file:
-		rss = parse(file.read())
+	rss = load()
+	#~ with open("cache/ibtimes.com.html") as file: rss = parse(file.read())
 	print(rss)
 
 

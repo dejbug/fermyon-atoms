@@ -10,7 +10,7 @@ id = "ibtimes"
 source = "ibt.wasm"
 environment = { RATE = "3600" }
 key_value_stores = ["default"]
-files = [ { source = "cache/", destination = "/" } ]
+# files = [ { source = "cache/", destination = "/" } ]
 allowed_http_hosts = [ "https://www.ibtimes.com" ]
 
 [component.trigger]
