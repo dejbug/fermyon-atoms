@@ -18,9 +18,11 @@ class FileStore:
 
 
 class Store:
-	def __init__(self, prefix):
+	def __init__(self, prefix, encoding = "utf-8"):
 		self.rss_key = prefix + ".rss"
 		self.time_key = prefix + ".time"
+		self.text_key = prefix + ".text"
+		self.encoding = encoding
 		self.store = FileStore()
 
 	@property
@@ -32,19 +34,29 @@ class Store:
 		return datetime.datetime.now(datetime.timezone.utc).timestamp()
 
 	@property
+	def text(self):
+		s = self.store.get(self.text_key)
+		return str(s, self.encoding) if s else ""
+
+	@text.setter
+	def text(self, text):
+		self.store.set(self.text_key, bytes(text, self.encoding))
+		self.update()
+
+	@property
 	def rss(self):
-		rss = self.store.get(self.rss_key)
-		return str(rss, "utf-8") if rss else ""
+		s = self.store.get(self.rss_key)
+		return str(s, self.encoding) if s else ""
 
 	@rss.setter
 	def rss(self, rss):
-		self.store.set(self.time_key, bytes(str(self.now), "utf-8"))
-		self.store.set(self.rss_key, bytes(rss, "utf-8"))
+		self.store.set(self.rss_key, bytes(rss, self.encoding))
+		self.update()
 
 	@property
 	def time(self):
-		time = self.store.get(self.time_key)
-		return float(time) if time else 0.0
+		s = self.store.get(self.time_key)
+		return float(s) if s else 0.0
 
 	@property
 	def age(self):
@@ -53,3 +65,6 @@ class Store:
 	@property
 	def expired(self):
 		return self.age > self.rate
+
+	def update(self):
+		self.store.set(self.time_key, bytes(str(self.now), self.encoding))

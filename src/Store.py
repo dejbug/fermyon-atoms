@@ -6,9 +6,10 @@ DEFAULT_RATE = 3600
 
 
 class Store:
-	def __init__(self, prefix):
+	def __init__(self, prefix, encoding = "utf-8"):
 		self.rss_key = prefix + ".rss"
 		self.time_key = prefix + ".time"
+		self.encoding = encoding
 		self.store = kv_open_default()
 
 	@property
@@ -20,14 +21,22 @@ class Store:
 		return datetime.datetime.now(datetime.timezone.utc).timestamp()
 
 	@property
+	def text(self):
+		return ""
+
+	@text.setter
+	def text(self, text):
+		pass
+
+	@property
 	def rss(self):
 		rss = self.store.get(self.rss_key)
-		return str(rss, "utf-8") if rss else ""
+		return str(rss, self.encoding) if rss else ""
 
 	@rss.setter
 	def rss(self, rss):
-		self.store.set(self.time_key, bytes(str(self.now), "utf-8"))
-		self.store.set(self.rss_key, bytes(rss, "utf-8"))
+		self.store.set(self.rss_key, bytes(rss, self.encoding))
+		self.update()
 
 	@property
 	def time(self):
@@ -41,3 +50,6 @@ class Store:
 	@property
 	def expired(self):
 		return self.age > self.rate
+
+	def update(self):
+		self.store.set(self.time_key, bytes(str(self.now), self.encoding))

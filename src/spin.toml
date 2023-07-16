@@ -7,7 +7,7 @@ version = "0.1.1"
 
 [[component]]
 id = "ibtimes"
-source = "ibt.wasm"
+source = "ibtimes.wasm"
 environment = { RATE = "3600" }
 key_value_stores = ["default"]
 # files = [ { source = "cache/", destination = "/" } ]
@@ -17,5 +17,21 @@ allowed_http_hosts = [ "https://www.ibtimes.com" ]
 route = "/ibtimes"
 
 [component.build]
-command = "spin py2wasm ibt -o ibt.wasm"
-watch = ["ibt.py", "Store.py", "fetch.py", "abs.py", "Pipfile"]
+command = "spin py2wasm ibtimes -o ibtimes.wasm"
+watch = ["ibtimes.py", "Store.py", "fetch.py", "abs.py", "Pipfile"]
+
+
+[[component]]
+id = "aldaily"
+source = "aldaily.wasm"
+environment = { RATE = "3600" }
+key_value_stores = ["default"]
+# files = [ { source = "cache/", destination = "/" } ]
+allowed_http_hosts = [ "https://www.aldaily.com" ]
+
+[component.trigger]
+route = "/aldaily"
+
+[component.build]
+command = "spin py2wasm aldaily -o aldaily.wasm"
+watch = ["aldaily.py", "Store.py", "fetch.py", "Pipfile"]
