@@ -1,18 +1,25 @@
-from spin_http import http_send, Request
+DEFAULT_USER_AGENT = "X"
 
-HEADERS = {
-	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
-	"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-	"Accept-Language": "en-US,en;q=0.5",
-	"Accept-Encoding": "identity",
-	#~ "Connection": "close",
-}
+def has_key(dict, key):
+	return key.lower() in map(str.lower, dict.keys())
 
-def fetch(url, headers = HEADERS):
-	res = http_send(Request("GET", url, headers, None))
-	return res.body.decode("utf8") if res.status == 200 else None
-	#~ req = Request("GET", url, headers, None)
-	#~ print(dir(req), req.headers, req.body)
-	#~ res = http_send(req)
-	#~ print(res.status, res.headers, res.body)
-	#~ return res.body.decode("utf8")
+try:
+	from spin_http import http_send, Request
+
+	def fetch(uri, headers = None):
+		headers = headers or {}
+		if not has_key(headers, "User-Agent"):
+			headers["User-Agent"] = DEFAULT_USER_AGENT
+		res = http_send(Request("GET", uri, headers, None))
+		return res.body.decode("utf8") # if res.status == 200 else None
+
+except:
+	from urllib.request import urlopen, Request
+
+	def fetch(uri, headers = None):
+		headers = headers or {}
+		if not has_key(headers, "User-Agent"):
+			headers["User-Agent"] = DEFAULT_USER_AGENT
+		req = Request(uri, headers = headers)
+		res = urlopen(req)
+		return res.read().decode("utf8") # if res.status == 200 else None

@@ -3,24 +3,11 @@ import datetime
 
 from abs import stringify
 
-try:
-	from spin_http import Response
-except:
-	from _fetch import fetch
-	from _Store import Store
-else:
-	from fetch import fetch
-	from Store import Store
+from Store import Store
+from fetch import fetch
 
 
 URL = "https://www.ibtimes.com"
-
-HEADERS = {
-	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
-	"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-	"Accept-Language": "en-US,en;q=0.5",
-	"Accept-Encoding": "identity",
-}
 
 
 @stringify
@@ -94,7 +81,7 @@ class Title:
 		return Title(m.group(1), normalize_link(m.group(2)), m.group(3))
 
 
-def rss(text, file=sys.stdout):
+def genrss(text, file=sys.stdout):
 	dt = datetime.datetime.now(datetime.timezone.utc)
 
 	file.write('<rss version="0.91">\n\t<channel>\n')
@@ -120,7 +107,7 @@ def rss(text, file=sys.stdout):
 	file.write('\t</channel>\n</rss>\n')
 
 
-def atom(text, file=sys.stdout):
+def genatom(text, file=sys.stdout):
 	dt = datetime.datetime.now(datetime.timezone.utc)
 	updated = f'<updated>{dt:%Y-%m-%dT%H:%M:%S}Z</updated>'
 
@@ -162,30 +149,30 @@ def normalize_link(text):
 
 def parse(text):
 	buffer = io.StringIO()
-	atom(text, buffer)
+	genatom(text, buffer)
 	return buffer.getvalue()
 
 
 def load():
-	store = Store("ibtimes")
-	#~ print(store.age)
+	store = Store(URL)
+	# print(store.age)
 
 	if store.expired:
-		text = fetch(URL, HEADERS)
-		rss = parse(text)
-		store.rss = rss
-		return rss
+		text = fetch(URL)
+		store.text = text
+		atom = parse(text)
+		store.atom = atom
+		return atom
 
-	return store.rss
-
-
-def main():
-	rss = load()
-	#~ with open("cache/ibtimes.com.html") as file: rss = parse(file.read())
-	print(rss)
+	return store.atom
 
 
-def handle_request(request):
+def main_native():
+	atom = load()
+	print(atom)
+
+
+def main_spinned(request):
 	#~ print(dir(request), request.method, request.headers)
 	#~ route = request.headers["spin-component-route"].strip("/")
 	#~ print(route)
@@ -193,10 +180,19 @@ def handle_request(request):
 	#~ rate = int(os.environ["RATE"])
 	#~ print(rate)
 
-	rss = load()
-	return Response(200, {"content-type": "text/xml"}, bytes(rss, "utf-8"))
+	atom = load()
+	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
 	#~ return Response(200, {"content-type": "text/plain"}, bytes("No such feed.", "utf-8"))
 
 
+try:
+	from spin_http import Response
+except:
+	handle_request = main_native
+else:
+	handle_request = main_spinned
+
+
 if __name__ == "__main__":
-	sys.exit(main())
+	sys.exit(handle_request())
+

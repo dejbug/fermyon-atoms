@@ -9,8 +9,7 @@ version = "0.1.1"
 id = "ibtimes"
 source = "ibtimes.wasm"
 environment = { RATE = "3600" }
-key_value_stores = ["default"]
-# files = [ { source = "cache/", destination = "/" } ]
+key_value_stores = [ "default" ]
 allowed_http_hosts = [ "https://www.ibtimes.com" ]
 
 [component.trigger]
@@ -25,8 +24,7 @@ watch = ["ibtimes.py", "Store.py", "fetch.py", "abs.py", "Pipfile"]
 id = "aldaily"
 source = "aldaily.wasm"
 environment = { RATE = "3600" }
-key_value_stores = ["default"]
-# files = [ { source = "cache/", destination = "/" } ]
+key_value_stores = [ "default" ]
 allowed_http_hosts = [ "https://www.aldaily.com" ]
 
 [component.trigger]
@@ -35,3 +33,18 @@ route = "/aldaily"
 [component.build]
 command = "spin py2wasm aldaily -o aldaily.wasm"
 watch = ["aldaily.py", "Store.py", "fetch.py", "Pipfile"]
+
+
+[[component]]
+id = "weforum"
+source = "weforum.wasm"
+environment = { RATE = "3600" }
+key_value_stores = [ "default" ]
+allowed_http_hosts = [ "https://www.weforum.org" ]
+
+[component.trigger]
+route = "/weforum"
+
+[component.build]
+command = "spin py2wasm weforum -o weforum.wasm"
+watch = ["weforum.py", "Store.py", "fetch.py", "Pipfile"]
