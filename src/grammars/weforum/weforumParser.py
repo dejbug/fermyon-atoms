@@ -10,15 +10,15 @@ else:
 
 def serializedATN():
     return [
-        4,1,6,25,2,0,7,0,2,1,7,1,1,0,4,0,6,8,0,11,0,12,0,7,1,1,3,1,11,8,
-        1,1,1,4,1,14,8,1,11,1,12,1,15,1,1,1,1,3,1,20,8,1,1,1,3,1,23,8,1,
-        1,1,0,0,2,0,2,0,0,27,0,5,1,0,0,0,2,10,1,0,0,0,4,6,3,2,1,0,5,4,1,
-        0,0,0,6,7,1,0,0,0,7,5,1,0,0,0,7,8,1,0,0,0,8,1,1,0,0,0,9,11,5,1,0,
-        0,10,9,1,0,0,0,10,11,1,0,0,0,11,13,1,0,0,0,12,14,5,2,0,0,13,12,1,
-        0,0,0,14,15,1,0,0,0,15,13,1,0,0,0,15,16,1,0,0,0,16,17,1,0,0,0,17,
-        19,5,3,0,0,18,20,5,4,0,0,19,18,1,0,0,0,19,20,1,0,0,0,20,22,1,0,0,
-        0,21,23,5,5,0,0,22,21,1,0,0,0,22,23,1,0,0,0,23,3,1,0,0,0,5,7,10,
-        15,19,22
+        4,1,6,26,2,0,7,0,2,1,7,1,1,0,4,0,6,8,0,11,0,12,0,7,1,1,3,1,11,8,
+        1,1,1,5,1,14,8,1,10,1,12,1,17,9,1,1,1,1,1,3,1,21,8,1,1,1,3,1,24,
+        8,1,1,1,0,0,2,0,2,0,0,28,0,5,1,0,0,0,2,10,1,0,0,0,4,6,3,2,1,0,5,
+        4,1,0,0,0,6,7,1,0,0,0,7,5,1,0,0,0,7,8,1,0,0,0,8,1,1,0,0,0,9,11,5,
+        1,0,0,10,9,1,0,0,0,10,11,1,0,0,0,11,15,1,0,0,0,12,14,5,2,0,0,13,
+        12,1,0,0,0,14,17,1,0,0,0,15,13,1,0,0,0,15,16,1,0,0,0,16,18,1,0,0,
+        0,17,15,1,0,0,0,18,20,5,3,0,0,19,21,5,4,0,0,20,19,1,0,0,0,20,21,
+        1,0,0,0,21,23,1,0,0,0,22,24,5,5,0,0,23,22,1,0,0,0,23,24,1,0,0,0,
+        24,3,1,0,0,0,5,7,10,15,20,23
     ]
 
 class weforumParser ( Parser ):
@@ -102,7 +102,7 @@ class weforumParser ( Parser ):
                 self.state = 7 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==1 or _la==2):
+                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & 14) != 0)):
                     break
 
         except RecognitionException as re:
@@ -168,33 +168,31 @@ class weforumParser ( Parser ):
                 self.match(weforumParser.Topic)
 
 
-            self.state = 13 
+            self.state = 15
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while True:
+            while _la==2:
                 self.state = 12
                 self.match(weforumParser.Author)
-                self.state = 15 
+                self.state = 17
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==2):
-                    break
 
-            self.state = 17
+            self.state = 18
             self.match(weforumParser.Article)
-            self.state = 19
+            self.state = 20
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==4:
-                self.state = 18
+                self.state = 19
                 self.match(weforumParser.TopicRef)
 
 
-            self.state = 22
+            self.state = 23
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==5:
-                self.state = 21
+                self.state = 22
                 self.match(weforumParser.AuthorsRef)
 
 

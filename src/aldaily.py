@@ -10,6 +10,8 @@ TITLE = "Arts & Letters Daily"
 TITLE_SHORT = "aldaily"
 COPYRIGHT = "Copyright 1998-2023 The Chronicle of Higher Education"
 
+HEADERS = {}
+
 
 #~ curl 'https://www.aldaily.com/alt/' --compressed -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Alt-Used: www.aldaily.com' -H 'Connection: keep-alive'-H 'Upgrade-Insecure-Requests: 1' -H 'Sec-Fetch-Dest: document' -H 'Sec-Fetch-Mode: navigate' -H 'Sec-Fetch-Site: none' -H 'Sec-Fetch-User: ?1' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'
 
@@ -102,11 +104,13 @@ def parse(text):
 	return buffer.getvalue()
 
 
-def load(force = False):
+def load(force = False, offline = False):
 	store = Store(URL)
 	# print(store.age)
 
-	if force or not store.text or store.expired:
+	if offline:
+		pass
+	elif force or not store.text or store.expired:
 		text = fetch(URL)
 		store.text = text
 		atom = parse(text)
@@ -121,7 +125,7 @@ def load(force = False):
 def main_native():
 	# atom = load(force = True)
 	atom = load()
-	print(atom)
+	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
 
 def main_spinned(request):
 	# atom = load(force = True)
@@ -139,3 +143,10 @@ else:
 
 if __name__ == "__main__":
 	sys.exit(handle_request())
+
+
+
+def main(force = False, offline = False):
+	atom = load(force = force, offline = False)
+	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
+

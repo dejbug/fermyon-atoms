@@ -3,48 +3,18 @@ authors = ["Dejan Budimir <dejbug@users.noreply.github.com>"]
 description = "Syndication for sites that don't provide it."
 name = "atoms2"
 trigger = { type = "http", base = "/" }
-version = "0.1.1"
+version = "0.2.0"
 
 [[component]]
-id = "ibtimes"
-source = "ibtimes.wasm"
+id = "app"
+source = "app.wasm"
 environment = { RATE = "3600" }
 key_value_stores = [ "default" ]
-allowed_http_hosts = [ "https://www.ibtimes.com" ]
+allowed_http_hosts = [ "https://www.ibtimes.com", "https://www.aldaily.com", "https://www.weforum.org" ]
 
 [component.trigger]
-route = "/ibtimes"
+route = "/..."
 
 [component.build]
-command = "spin py2wasm ibtimes -o ibtimes.wasm"
-watch = ["ibtimes.py", "Store.py", "fetch.py", "abs.py", "Pipfile"]
-
-
-[[component]]
-id = "aldaily"
-source = "aldaily.wasm"
-environment = { RATE = "3600" }
-key_value_stores = [ "default" ]
-allowed_http_hosts = [ "https://www.aldaily.com" ]
-
-[component.trigger]
-route = "/aldaily"
-
-[component.build]
-command = "spin py2wasm aldaily -o aldaily.wasm"
-watch = ["aldaily.py", "Store.py", "fetch.py", "Pipfile"]
-
-
-[[component]]
-id = "weforum"
-source = "weforum.wasm"
-environment = { RATE = "3600" }
-key_value_stores = [ "default" ]
-allowed_http_hosts = [ "https://www.weforum.org" ]
-
-[component.trigger]
-route = "/weforum"
-
-[component.build]
-command = "spin py2wasm weforum -o weforum.wasm"
-watch = ["weforum.py", "Store.py", "fetch.py", "Pipfile"]
+command = "spin py2wasm app -o app.wasm"
+watch = ["app.py", "ibtimes.py", "aldaily.py", "weforum.py", "Store.py", "fetch.py", "abs.py", "Pipfile"]

@@ -153,11 +153,13 @@ def parse(text):
 	return buffer.getvalue()
 
 
-def load():
+def load(force = False, offline = False):
 	store = Store(URL)
 	# print(store.age)
 
-	if store.expired:
+	if offline:
+		pass
+	elif force or not store.text or store.expired:
 		text = fetch(URL)
 		store.text = text
 		atom = parse(text)
@@ -196,3 +198,7 @@ else:
 if __name__ == "__main__":
 	sys.exit(handle_request())
 
+
+def main(force = False, offline = False):
+	atom = load(force = force, offline = False)
+	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))

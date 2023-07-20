@@ -19,4 +19,4 @@ item : String Colon String ;
 */
 
 r  : article+ ;
-article : Topic? Author+ Article TopicRef? AuthorsRef? ;
+article : Topic? Author* Article TopicRef? AuthorsRef? ;

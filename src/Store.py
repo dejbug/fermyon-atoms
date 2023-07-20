@@ -2,6 +2,8 @@ import datetime, os
 
 from urllib.parse import urlparse
 
+from fetch import fetch
+
 
 class FileStore:
 	def get(self, key):
@@ -35,6 +37,18 @@ class Store:
 		self.text_key = prefix + ".text"
 		self.store = backend()
 		self.encoding = encoding
+
+	@classmethod
+	def load(cls, URL, force = False, offline = False):
+		store = cls(URL)
+
+		if offline:
+			pass
+		elif force or not store.text or store.expired:
+			text = fetch(URL)
+			store.text = text
+
+		return store
 
 	@classmethod
 	def prefix_from_uri(cls, uri):
