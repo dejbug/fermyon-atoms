@@ -95,7 +95,9 @@ class weforumParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 5 
             self._errHandler.sync(self)
+            print('hi')
             _la = self._input.LA(1)
+            print('ho')
             while True:
                 self.state = 4
                 self.article()

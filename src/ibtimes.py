@@ -9,6 +9,8 @@ from fetch import fetch
 
 URL = "https://www.ibtimes.com"
 
+HEADERS = {}
+
 
 @stringify
 class ArticleBlock:

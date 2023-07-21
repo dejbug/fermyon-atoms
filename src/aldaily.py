@@ -5,7 +5,7 @@ from Store import Store
 from fetch import fetch
 
 
-URL = "http://www.aldaily.com"
+URL = "https://www.aldaily.com"
 TITLE = "Arts & Letters Daily"
 TITLE_SHORT = "aldaily"
 COPYRIGHT = "Copyright 1998-2023 The Chronicle of Higher Education"

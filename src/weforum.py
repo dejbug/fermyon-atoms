@@ -7,6 +7,12 @@ from grammars.weforum.weforumLexer import weforumLexer
 from grammars.weforum.weforumParser import weforumParser
 from grammars.weforum.weforumParserListener import weforumParserListener
 
+# We have to do this otherwise we get a strange error:
+#	OSError: [Errno 8] Bad file descriptor: '/1/antlr4'
+# See: antlr4.ErrorStrategy.sync
+# See: antlr4.atn.ATN.nextTokensInContext
+from antlr4 import LL1Analyzer
+
 from Store import Store
 from fetch import fetch
 
@@ -16,6 +22,8 @@ URL = "https://www.weforum.org/agenda/feed"
 TITLE = "World Economic Forum"
 TITLE_SHORT = "weforum.org"
 COPYRIGHT = "Copyright 2023 World Economic Forum"
+
+HEADERS = {}
 
 
 Topic = collections.namedtuple("Topic", "id title url")
@@ -184,23 +192,7 @@ class Listener(weforumParserListener):
 		self.items.append(parse_item(ctx, self.resolver))
 
 
-def parse(text):
-	input = InputStream(text)
-	lexer = weforumLexer(input)
-	stream = CommonTokenStream(lexer)
-	parser = weforumParser(stream)
-	tree = parser.r()
-	# print(tree.toStringTree(recog=parser))
-	listener = Listener()
-	walker = ParseTreeWalker()
-	walker.walk(listener, tree)
-
-	buffer = io.StringIO()
-	print_feed(listener.items, buffer)
-	return buffer.getvalue()
-
-
-def print_feed(items, file=sys.stdout):
+def genatom(items, file=sys.stdout):
 	dt = datetime.datetime.now(datetime.timezone.utc)
 	updated = f'<updated>{dt:%Y-%m-%dT%H:%M:%S}Z</updated>'
 
@@ -220,57 +212,17 @@ def print_feed(items, file=sys.stdout):
 	file.write('</feed>')
 
 
-def genatom(text):
-	file = io.StringIO()
-	items = parse(text)
-	print_feed(items, file)
-	return file.getvalue()
+def parse(text):
+	input = InputStream(text)
+	lexer = weforumLexer(input)
+	stream = CommonTokenStream(lexer)
+	parser = weforumParser(stream)
+	tree = parser.r()
+	# print(tree.toStringTree(recog=parser))
+	listener = Listener()
+	walker = ParseTreeWalker()
+	walker.walk(listener, tree)
 
-
-def load(force = False, offline = False):
-	store = Store(URL)
-	#~ print(store.age)
-
-	if offline:
-		pass
-	elif force or not store.text or store.expired:
-		text = fetch(URL)
-		store.text = text
-		atom = parse(text)
-		store.atom = atom
-		return atom
-
-	return store.atom
-
-
-def main_native():
-	store = Store.load(URL, offline = True)
-	print(genatom(store.text))
-	# for article in iter_articles(store.text):
-		# print(article)
-
-
-def main_spinned(request):
-	atom = load()
-	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
-
-
-try:
-	from spin_http import Response
-except:
-	handle_request = main_native
-else:
-	handle_request = main_spinned
-
-
-if __name__ == "__main__":
-	sys.exit(handle_request())
-
-
-def main(force = False, offline = False):
-	# atom = load(force = force, offline = False)
-	store = Store(URL)
-	print(store.text)
-	atom = ""
-	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
-
+	buffer = io.StringIO()
+	genatom(listener.items, buffer)
+	return buffer.getvalue()

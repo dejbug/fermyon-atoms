@@ -8,9 +8,9 @@ from fetch import fetch
 from Store import Store
 
 
-OFFLINE = True
-REPARSE = False
 REFETCH = False
+OFFLINE = False
+REPARSE = False
 
 
 try:
@@ -58,7 +58,7 @@ def atom_from_module(module):
 		if REPARSE:
 			atom = module.parse(store.text)
 			store.atom = atom
-	elif REFETCH or not store.text or store.expired:
+	elif REFETCH or not store.text or not store.atom or store.expired:
 		text = fetch(module.URL, module.HEADERS)
 		store.text = text
 		atom = module.parse(text)
