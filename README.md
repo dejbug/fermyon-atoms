@@ -1,6 +1,5 @@
 # fermyon-atoms
 
-Development version [here](https://atoms2-xnlzcqck.fermyon.app/ibtimes).
+Development version [here](https://atoms-dev-7cotjb6o.fermyon.app/).
 
 Final version [here](https://atoms.fermyon.app/).
-
