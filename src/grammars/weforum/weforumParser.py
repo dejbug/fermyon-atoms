@@ -1,4 +1,4 @@
-# Generated from weforumParser.g4 by ANTLR 4.13.0
+# Generated from weforum.g4 by ANTLR 4.13.0
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -23,7 +23,7 @@ def serializedATN():
 
 class weforumParser ( Parser ):
 
-    grammarFileName = "weforumParser.g4"
+    grammarFileName = "weforum.g4"
 
     atn = ATNDeserializer().deserialize(serializedATN())
 
@@ -36,10 +36,10 @@ class weforumParser ( Parser ):
     symbolicNames = [ "<INVALID>", "Topic", "Author", "Article", "TopicRef", 
                       "AuthorsRef", "ANY" ]
 
-    RULE_r = 0
+    RULE_start = 0
     RULE_article = 1
 
-    ruleNames =  [ "r", "article" ]
+    ruleNames =  [ "start", "article" ]
 
     EOF = Token.EOF
     Topic=1
@@ -58,7 +58,7 @@ class weforumParser ( Parser ):
 
 
 
-    class RContext(ParserRuleContext):
+    class StartContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -73,23 +73,23 @@ class weforumParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return weforumParser.RULE_r
+            return weforumParser.RULE_start
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterR" ):
-                listener.enterR(self)
+            if hasattr( listener, "enterStart" ):
+                listener.enterStart(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitR" ):
-                listener.exitR(self)
+            if hasattr( listener, "exitStart" ):
+                listener.exitStart(self)
 
 
 
 
-    def r(self):
+    def start(self):
 
-        localctx = weforumParser.RContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 0, self.RULE_r)
+        localctx = weforumParser.StartContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 0, self.RULE_start)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)

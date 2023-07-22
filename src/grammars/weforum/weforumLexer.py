@@ -1,4 +1,4 @@
-# Generated from weforumLexer.g4 by ANTLR 4.13.0
+# Generated from weforum.g4 by ANTLR 4.13.0
 from antlr4 import *
 from io import StringIO
 import sys
@@ -115,7 +115,7 @@ class weforumLexer(Lexer):
     ruleNames = [ "String", "Topic", "Author", "Article", "TopicRef", "AuthorsRef", 
                   "ANY" ]
 
-    grammarFileName = "weforumLexer.g4"
+    grammarFileName = "weforum.g4"
 
     def __init__(self, input=None, output:TextIO = sys.stdout):
         super().__init__(input, output)

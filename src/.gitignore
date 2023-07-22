@@ -1,7 +1,4 @@
 __pycache__
 *.wasm
 .spin
-*.atom
-*.time
-*.text
-/cache/
+.cache/

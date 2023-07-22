@@ -2,17 +2,23 @@ import datetime, os
 
 from urllib.parse import urlparse
 
-from fetch import fetch
-
 
 class FileStore:
+	ROOT = "./.cache"
+
+	@classmethod
+	def path_from_key(cls, key):
+		return os.path.join(cls.ROOT, key)
+
 	def get(self, key):
-		if os.path.isfile(key):
-			with open(key, "rb") as file:
+		path = type(self).path_from_key(key)
+		if os.path.isfile(path):
+			with open(path, "rb") as file:
 				return file.read()
 
 	def set(self, key, val):
-		with open(key, "wb") as file:
+		path = type(self).path_from_key(key)
+		with open(path, "wb") as file:
 			file.write(val)
 
 
@@ -37,18 +43,6 @@ class Store:
 		self.text_key = prefix + ".text"
 		self.store = backend()
 		self.encoding = encoding
-
-	@classmethod
-	def load(cls, URL, force = False, offline = False):
-		store = cls(URL)
-
-		if offline:
-			pass
-		elif force or not store.text or store.expired:
-			text = fetch(URL)
-			store.text = text
-
-		return store
 
 	@classmethod
 	def prefix_from_uri(cls, uri):

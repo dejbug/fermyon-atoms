@@ -1,16 +1,16 @@
-import io, os, re, sys
-import datetime
+import sys
+import re, io, collections, datetime
 
-import sys, re, collections, datetime
 from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from grammars.weforum.weforumLexer import weforumLexer
 from grammars.weforum.weforumParser import weforumParser
-from grammars.weforum.weforumParserListener import weforumParserListener
+from grammars.weforum.weforumListener import weforumListener
 
 # We have to do this otherwise we get a strange error:
 #	OSError: [Errno 8] Bad file descriptor: '/1/antlr4'
 # See: antlr4.ErrorStrategy.sync
 # See: antlr4.atn.ATN.nextTokensInContext
+# This might be a Python version issue.
 from antlr4 import LL1Analyzer
 
 from Store import Store
@@ -180,7 +180,7 @@ class Resolver:
 			return self.deref_topic(ref)
 
 
-class Listener(weforumParserListener):
+class Listener(weforumListener):
 	def __init__(self):
 		self.items = []
 		self.resolver = Resolver()
@@ -217,7 +217,7 @@ def parse(text):
 	lexer = weforumLexer(input)
 	stream = CommonTokenStream(lexer)
 	parser = weforumParser(stream)
-	tree = parser.r()
+	tree = parser.start()
 	# print(tree.toStringTree(recog=parser))
 	listener = Listener()
 	walker = ParseTreeWalker()

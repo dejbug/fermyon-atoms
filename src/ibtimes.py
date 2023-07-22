@@ -12,6 +12,10 @@ URL = "https://www.ibtimes.com"
 HEADERS = {}
 
 
+def normalize_link(text):
+	return "https://www.ibtimes.com" + text if text.startswith("/") else text
+
+
 @stringify
 class ArticleBlock:
 	REGEX = re.compile(r'<article>\s*(.+?)\s*</article>', re.S)
@@ -83,32 +87,6 @@ class Title:
 		return Title(m.group(1), normalize_link(m.group(2)), m.group(3))
 
 
-def genrss(text, file=sys.stdout):
-	dt = datetime.datetime.now(datetime.timezone.utc)
-
-	file.write('<rss version="0.91">\n\t<channel>\n')
-	file.write('\t\t<title>IBT</title>\n')
-	file.write(f'\t\t<link>{URL}</link>\n')
-	file.write('\t\t<description>RSS Feed of the International Business Times</description>\n')
-	file.write('\t\t<language>en-us</language>\n')
-	file.write('\t\t<copyright>Copyright 2023 IBTimes LLC. All Rights Reserved</copyright>\n')
-	file.write(f'\t\t<lastBuildDate>{dt:%a, %d %b %Y %H:%M} GMT</lastBuildDate>\n')
-	file.write('\t\t<skipHours>1</skipHours>\n')
-	file.write('\t\t<managingEditor>https://github.com/dejbug</managingEditor>\n')
-	file.write('\t\t<webMaster>https://github.com/dejbug</webMaster>\n')
-	for block in ArticleBlock.iter(text):
-		headline = Headline.from_article_items(ArticleItem.iter(block))
-		file.write('\t\t\t<item>\n')
-		title = headline.title
-		file.write(f'\t\t\t\t<title>{title.text}</title>\n')
-		if title.type == "href":
-			file.write(f'\t\t\t\t<link>{title.link}</link>\n')
-		if headline.summary:
-			file.write(f'\t\t\t\t<description>{headline.summary}</description>\n')
-		file.write('\t\t\t</item>\n')
-	file.write('\t</channel>\n</rss>\n')
-
-
 def genatom(text, file=sys.stdout):
 	dt = datetime.datetime.now(datetime.timezone.utc)
 	updated = f'<updated>{dt:%Y-%m-%dT%H:%M:%S}Z</updated>'
@@ -145,62 +123,7 @@ def genatom(text, file=sys.stdout):
 	file.write('\t</feed>\n')
 
 
-def normalize_link(text):
-	return "https://www.ibtimes.com" + text if text.startswith("/") else text
-
-
 def parse(text):
 	buffer = io.StringIO()
 	genatom(text, buffer)
 	return buffer.getvalue()
-
-
-def load(force = False, offline = False):
-	store = Store(URL)
-	# print(store.age)
-
-	if offline:
-		pass
-	elif force or not store.text or store.expired:
-		text = fetch(URL)
-		store.text = text
-		atom = parse(text)
-		store.atom = atom
-		return atom
-
-	return store.atom
-
-
-def main_native():
-	atom = load()
-	print(atom)
-
-
-def main_spinned(request):
-	#~ print(dir(request), request.method, request.headers)
-	#~ route = request.headers["spin-component-route"].strip("/")
-	#~ print(route)
-
-	#~ rate = int(os.environ["RATE"])
-	#~ print(rate)
-
-	atom = load()
-	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
-	#~ return Response(200, {"content-type": "text/plain"}, bytes("No such feed.", "utf-8"))
-
-
-try:
-	from spin_http import Response
-except:
-	handle_request = main_native
-else:
-	handle_request = main_spinned
-
-
-if __name__ == "__main__":
-	sys.exit(handle_request())
-
-
-def main(force = False, offline = False):
-	atom = load(force = force, offline = False)
-	return Response(200, {"content-type": "text/xml"}, bytes(atom, "utf-8"))
