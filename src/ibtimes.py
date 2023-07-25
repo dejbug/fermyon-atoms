@@ -1,10 +1,7 @@
-import io, os, re, sys
-import datetime
+import sys, re, io, datetime
 
 from lib.abs import stringify
-
-from lib.Store import Store
-from lib.fetch import fetch
+from lib.utils import xml_escape
 
 
 URL = "https://www.ibtimes.com"
@@ -87,7 +84,7 @@ class Title:
 		#~ print(text)
 		m = cls.REGEX.search(text)
 		if not m: return None
-		return Title(m.group(1), normalize_link(m.group(2)), normalize_title(m.group(3)))
+		return Title(m.group(1), normalize_link(m.group(2)), xml_escape(m.group(3)))
 
 
 def genatom(text, file=sys.stdout):
@@ -111,12 +108,12 @@ def genatom(text, file=sys.stdout):
 		headline = Headline.from_article_items(ArticleItem.iter(block))
 		file.write('\t\t\t<entry>\n')
 		title = headline.title
-		file.write(f'\t\t\t\t<title>{title.text}</title>\n')
+		file.write(f'\t\t\t\t<title>{xml_escape(title.text)}</title>\n')
 		if title.type == "href":
 			file.write(f'\t\t\t\t<link href="{title.link}"/>\n')
 			file.write(f'\t\t\t\t<id>{title.link}</id>\n')
 		if headline.summary:
-			file.write(f'\t\t\t\t<summary>{headline.summary}</summary>\n')
+			file.write(f'\t\t\t\t<summary>{xml_escape(headline.summary)}</summary>\n')
 		file.write(f'\t\t\t\t{updated}\n')
 		#~ file.write('\t\t\t\t<author>\n')
 		#~ file.write('\t\t\t\t\t<name>International Business Times</name>\n')

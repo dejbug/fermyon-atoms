@@ -1,7 +1,6 @@
-import sys, os, re, io, datetime, html
+import sys, os, re, io, datetime
 
-from lib.Store import Store
-from lib.fetch import fetch
+from lib.utils import xml_escape
 
 
 URL = "https://www.aldaily.com"
@@ -10,15 +9,6 @@ TITLE_SHORT = "aldaily"
 COPYRIGHT = "Copyright 1998-2023 The Chronicle of Higher Education"
 
 HEADERS = {}
-
-def xml_escape(text):
-	text = html.unescape(text)
-	text = re.sub(r'&', '&amp;', text, re.S)
-	text = re.sub(r'<', '&lt;', text, re.S)
-	text = re.sub(r'>', '&gt;', text, re.S)
-	text = re.sub(r'\'', '&apos;', text, re.S)
-	text = re.sub(r'"', '&quot;', text, re.S)
-	return text
 
 
 def parse_dayheader(text):

@@ -1,4 +1,4 @@
-import sys, os, re, io, datetime, collections
+import sys, re, io, datetime, collections
 
 from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from grammars.weforum.weforumLexer import weforumLexer
@@ -12,8 +12,7 @@ from grammars.weforum.weforumListener import weforumListener
 # This might be a Python version issue.
 from antlr4 import LL1Analyzer
 
-from lib.Store import Store
-from lib.fetch import fetch
+from lib.utils import xml_escape
 
 
 URL = "https://www.weforum.org/agenda/feed"
@@ -109,7 +108,7 @@ def print_item_as_atom(item, file=sys.stdout):
 	topic, authors, article = item
 	file.write('<entry>\n')
 	file.write(f'\t<category term="{topic.url}" label="{topic.title}"/>\n')
-	file.write(f'\t<title>{article.title}</title>\n')
+	file.write(f'\t<title>{xml_escape(article.title)}</title>\n')
 	file.write(f'\t<link href="{article.url}"/>\n')
 	file.write(f'\t<id>{article.url}</id>\n')
 	for author in authors:

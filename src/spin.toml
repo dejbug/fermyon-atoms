@@ -3,7 +3,7 @@ authors = ["Dejan Budimir <dejbug@users.noreply.github.com>"]
 description = "Hand-crafted syndication for sites that don't provide it."
 name = "atoms"
 trigger = { type = "http", base = "/" }
-version = "0.3.2"
+version = "0.3.3"
 
 [[component]]
 id = "app"
