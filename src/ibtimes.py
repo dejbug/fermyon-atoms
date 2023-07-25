@@ -1,10 +1,10 @@
 import io, os, re, sys
-import datetime, html
+import datetime
 
-from abs import stringify
+from lib.abs import stringify
 
-from Store import Store
-from fetch import fetch
+from lib.Store import Store
+from lib.fetch import fetch
 
 
 URL = "https://www.ibtimes.com"

@@ -1,11 +1,12 @@
-import argparse, re, sys
+import sys, os, re, argparse
 
 import aldaily
 import ibtimes
 import weforum
+parsers = [ aldaily, ibtimes, weforum ]
 
-from fetch import fetch
-from Store import Store
+from lib.fetch import fetch
+from lib.Store import Store
 
 
 OFFLINE = False
@@ -41,29 +42,27 @@ else:
 		return Response(200, {"content-type": ctype}, bytes(text, encoding))
 
 
-def module_from_route(route):
-	if re.match(r'^/aldaily(/.*)?$', route):
-		return aldaily
-	if re.match(r'^/ibtimes(/.*)?$', route):
-		return ibtimes
-	if re.match(r'^/weforum(/.*)?$', route):
-		return weforum
+def parser_from_route(route):
+	for parser in parsers:
+		if re.match(r'^/%s(/.*)?$' % parser.__name__, route):
+			return parser
 
 
-def atom_from_module(module):
-	store = Store(module.URL)
+def atom_from_parser(parser):
+	store = Store(parser.URL)
+	print(store.age)
 	atom = store.atom
 
 	if OFFLINE:
 		if REPARSE:
-			atom = module.parse(store.text)
+			atom = parser.parse(store.text)
 	elif REPARSE:
-		atom = module.parse(store.text)
+		atom = parser.parse(store.text)
 		store.atom = atom
 	elif REFETCH or not store.text or not store.atom or store.expired:
-		text = fetch(module.URL, module.HEADERS)
+		text = fetch(parser.URL, parser.HEADERS)
 		store.text = text
-		atom = module.parse(text)
+		atom = parser.parse(text)
 		store.atom = atom
 
 	return atom
@@ -71,12 +70,13 @@ def atom_from_module(module):
 
 def handle_request(request):
 	route = route_from_arg(request)
-	module = module_from_route(route)
+	parser = parser_from_route(route)
 
-	if not module:
-		return serve(f'No such feed: "{route}".', "text/plain")
+	if not parser:
+		routes = ", ".join("/" + parser.__name__ for parser in parsers)
+		return serve(f'No such feed: "{route}". Try one of: {routes}.', "text/plain")
 
-	atom = atom_from_module(module)
+	atom = atom_from_parser(parser)
 	return serve(atom)
 
 

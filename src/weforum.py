@@ -1,5 +1,4 @@
-import sys
-import re, io, collections, datetime
+import sys, os, re, io, datetime, collections
 
 from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from grammars.weforum.weforumLexer import weforumLexer
@@ -13,8 +12,8 @@ from grammars.weforum.weforumListener import weforumListener
 # This might be a Python version issue.
 from antlr4 import LL1Analyzer
 
-from Store import Store
-from fetch import fetch
+from lib.Store import Store
+from lib.fetch import fetch
 
 
 URL = "https://www.weforum.org/agenda/feed"

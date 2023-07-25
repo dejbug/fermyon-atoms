@@ -1,8 +1,7 @@
-import io, os, re, sys
-import datetime, html
+import sys, os, re, io, datetime, html
 
-from Store import Store
-from fetch import fetch
+from lib.Store import Store
+from lib.fetch import fetch
 
 
 URL = "https://www.aldaily.com"
