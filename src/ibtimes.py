@@ -1,5 +1,5 @@
 import io, os, re, sys
-import datetime
+import datetime, html
 
 from abs import stringify
 
@@ -14,6 +14,9 @@ HEADERS = {}
 
 def normalize_link(text):
 	return "https://www.ibtimes.com" + text if text.startswith("/") else text
+
+def normalize_title(text):
+	return html.escape(text)
 
 
 @stringify
@@ -84,7 +87,7 @@ class Title:
 		#~ print(text)
 		m = cls.REGEX.search(text)
 		if not m: return None
-		return Title(m.group(1), normalize_link(m.group(2)), m.group(3))
+		return Title(m.group(1), normalize_link(m.group(2)), normalize_title(m.group(3)))
 
 
 def genatom(text, file=sys.stdout):
