@@ -5,8 +5,6 @@ from lib.utils import xml_escape
 class Error(Exception): pass
 class ParseError(Error): pass
 
-VERSION = "0.4.0"
-
 
 URL = "https://www.weforum.org/agenda/feed"
 
@@ -69,13 +67,23 @@ def print_article_as_atom(article, file=sys.stdout):
 		file.write(f'\t\t<name>{normalize_name(author.name)}</name>\n')
 		file.write('\t</contributor>\n')
 	if article.ecap:
-		file.write(f'\t<summary>{article.ecap}</summary>\n')
+		file.write(f'\t<summary>{xml_escape(article.ecap)}</summary>\n')
 	if article.description:
-		file.write(f'\t<content{article.description}</content>\n')
+		file.write(f'\t<content>{xml_escape(article.description)}</content>\n')
 	file.write('</entry>\n')
 
 
+def get_version_from_manifest():
+	with open('spin.toml') as file:
+		m = re.search(r'^version\s*=\s*"(.+?)"', file.read(), re.M)
+		if not m: return ""
+		return m.group(1)
+
+
 def genatom(articles, file=sys.stdout):
+	version = get_version_from_manifest()
+	versionstring = f' version="{version}"' if version else ""
+
 	dt = datetime.datetime.now(datetime.timezone.utc)
 	updated = f'<updated>{dt:%Y-%m-%dT%H:%M:%S}Z</updated>'
 
@@ -90,7 +98,7 @@ def genatom(articles, file=sys.stdout):
 	file.write('\t</author>\n')
 	file.write(f'\t<rights>{COPYRIGHT}</rights>\n')
 	file.write(f'\t<id>{URL}</id>\n')
-	file.write(f'\t<generator uri="https://atoms.fermyon.app" version="{VERSION}">\n')
+	file.write(f'\t<generator uri="https://atoms.fermyon.app"{versionstring}>\n')
 	file.write(f'\t\tWhere is my complimentary Fermyon T-Shirt? -- Dejan\n')
 	file.write(f'\t</generator>\n')
 	for article in articles:

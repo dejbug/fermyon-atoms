@@ -3,7 +3,7 @@ authors = ["Dejan Budimir <dejbug@users.noreply.github.com>"]
 description = "Hand-crafted syndication for sites that don't provide it."
 name = "atoms-dev"
 trigger = { type = "http", base = "/" }
-version = "0.4.0"
+version = "0.4.1"
 
 [[component]]
 id = "app"
@@ -11,6 +11,7 @@ source = "app.wasm"
 environment = { RATE = "3600" }
 key_value_stores = [ "default" ]
 allowed_http_hosts = [ "https://www.ibtimes.com", "https://www.aldaily.com", "https://www.weforum.org" ]
+files = [ 'spin.toml' ]
 
 [component.trigger]
 route = "/..."
