@@ -1,0 +1,9 @@
+#?/bin/bash
+
+case $1 in
+	blah)
+	echo hi ;;
+
+esac
+
+-- sqlite3 .spin/sqlite_key_value.db 'SELECT key FROM spin_key_value'

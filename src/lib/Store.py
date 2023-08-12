@@ -2,9 +2,11 @@ import datetime, os
 
 from urllib.parse import urlparse
 
+LOCAL_STORE_ROOT = "./.cache"
+
 
 class FileStore:
-	ROOT = "./.cache"
+	ROOT = LOCAL_STORE_ROOT
 
 	@classmethod
 	def path_from_key(cls, key):
