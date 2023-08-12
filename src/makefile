@@ -45,13 +45,16 @@ endef
 
 .PHONY : all clean reset
 
-all : test_weforum_sed
+all : | grammars
 
-clean :
-	rm -f $(DIR_TEMP)/weforum.out
+clean : ; rm -rf $(DIR_TEMP)
 
-reset : | clean
-	rm -rf grammars
+reset : | clean ; rm -rf grammars
+
+
+.PHONY : grammars
+GRAMMAR_FILES := $(foreach name,weforum,$(call deriveParserFiles,$(name)))
+grammars : $(GRAMMAR_FILES)
 
 
 $(call deriveParserFiles,weforum) : weforum.g4
@@ -60,7 +63,9 @@ $(call deriveParserFiles,weforum) : weforum.g4
 
 $(DIR_TEMP)/weforum.out : $(call deriveParserFiles,weforum)
 
-%.out : ; $(call createPygrunOutputFile,$@)
+$(DIR_TEMP) : ; @mkdir .temp
+
+%.out : $(DIR_TEMP) ; $(call createPygrunOutputFile,$@)
 
 
 # Tests
