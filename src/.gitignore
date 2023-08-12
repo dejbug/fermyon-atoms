@@ -2,3 +2,6 @@ __pycache__
 *.wasm
 .spin
 .cache/
+.temp/
+*.tokens
+*.interp

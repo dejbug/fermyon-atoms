@@ -10,15 +10,15 @@ else:
 
 def serializedATN():
     return [
-        4,1,6,26,2,0,7,0,2,1,7,1,1,0,4,0,6,8,0,11,0,12,0,7,1,1,3,1,11,8,
-        1,1,1,5,1,14,8,1,10,1,12,1,17,9,1,1,1,1,1,3,1,21,8,1,1,1,3,1,24,
-        8,1,1,1,0,0,2,0,2,0,0,28,0,5,1,0,0,0,2,10,1,0,0,0,4,6,3,2,1,0,5,
-        4,1,0,0,0,6,7,1,0,0,0,7,5,1,0,0,0,7,8,1,0,0,0,8,1,1,0,0,0,9,11,5,
-        1,0,0,10,9,1,0,0,0,10,11,1,0,0,0,11,15,1,0,0,0,12,14,5,2,0,0,13,
-        12,1,0,0,0,14,17,1,0,0,0,15,13,1,0,0,0,15,16,1,0,0,0,16,18,1,0,0,
-        0,17,15,1,0,0,0,18,20,5,3,0,0,19,21,5,4,0,0,20,19,1,0,0,0,20,21,
-        1,0,0,0,21,23,1,0,0,0,22,24,5,5,0,0,23,22,1,0,0,0,23,24,1,0,0,0,
-        24,3,1,0,0,0,5,7,10,15,20,23
+        4,1,8,26,2,0,7,0,2,1,7,1,1,0,4,0,6,8,0,11,0,12,0,7,1,1,3,1,11,8,
+        1,1,1,5,1,14,8,1,10,1,12,1,17,9,1,1,1,1,1,5,1,21,8,1,10,1,12,1,24,
+        9,1,1,1,0,0,2,0,2,0,1,1,0,4,7,27,0,5,1,0,0,0,2,10,1,0,0,0,4,6,3,
+        2,1,0,5,4,1,0,0,0,6,7,1,0,0,0,7,5,1,0,0,0,7,8,1,0,0,0,8,1,1,0,0,
+        0,9,11,5,1,0,0,10,9,1,0,0,0,10,11,1,0,0,0,11,15,1,0,0,0,12,14,5,
+        2,0,0,13,12,1,0,0,0,14,17,1,0,0,0,15,13,1,0,0,0,15,16,1,0,0,0,16,
+        18,1,0,0,0,17,15,1,0,0,0,18,22,5,3,0,0,19,21,7,0,0,0,20,19,1,0,0,
+        0,21,24,1,0,0,0,22,20,1,0,0,0,22,23,1,0,0,0,23,3,1,0,0,0,24,22,1,
+        0,0,0,4,7,10,15,22
     ]
 
 class weforumParser ( Parser ):
@@ -34,7 +34,7 @@ class weforumParser ( Parser ):
     literalNames = [  ]
 
     symbolicNames = [ "<INVALID>", "Topic", "Author", "Article", "TopicRef", 
-                      "AuthorsRef", "ANY" ]
+                      "AuthorsRef", "Description", "PublishedAt", "ANY" ]
 
     RULE_start = 0
     RULE_article = 1
@@ -47,7 +47,9 @@ class weforumParser ( Parser ):
     Article=3
     TopicRef=4
     AuthorsRef=5
-    ANY=6
+    Description=6
+    PublishedAt=7
+    ANY=8
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -133,11 +135,29 @@ class weforumParser ( Parser ):
             else:
                 return self.getToken(weforumParser.Author, i)
 
-        def TopicRef(self):
-            return self.getToken(weforumParser.TopicRef, 0)
+        def Description(self, i:int=None):
+            if i is None:
+                return self.getTokens(weforumParser.Description)
+            else:
+                return self.getToken(weforumParser.Description, i)
 
-        def AuthorsRef(self):
-            return self.getToken(weforumParser.AuthorsRef, 0)
+        def PublishedAt(self, i:int=None):
+            if i is None:
+                return self.getTokens(weforumParser.PublishedAt)
+            else:
+                return self.getToken(weforumParser.PublishedAt, i)
+
+        def TopicRef(self, i:int=None):
+            if i is None:
+                return self.getTokens(weforumParser.TopicRef)
+            else:
+                return self.getToken(weforumParser.TopicRef, i)
+
+        def AuthorsRef(self, i:int=None):
+            if i is None:
+                return self.getTokens(weforumParser.AuthorsRef)
+            else:
+                return self.getToken(weforumParser.AuthorsRef, i)
 
         def getRuleIndex(self):
             return weforumParser.RULE_article
@@ -180,21 +200,20 @@ class weforumParser ( Parser ):
 
             self.state = 18
             self.match(weforumParser.Article)
-            self.state = 20
+            self.state = 22
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==4:
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 240) != 0):
                 self.state = 19
-                self.match(weforumParser.TopicRef)
-
-
-            self.state = 23
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==5:
-                self.state = 22
-                self.match(weforumParser.AuthorsRef)
-
+                _la = self._input.LA(1)
+                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 240) != 0)):
+                    self._errHandler.recoverInline(self)
+                else:
+                    self._errHandler.reportMatch(self)
+                    self.consume()
+                self.state = 24
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
 
         except RecognitionException as re:
             localctx.exception = re

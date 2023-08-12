@@ -65,33 +65,32 @@ def parse_topicRef(topicRef):
 		return Ref(*x.groups())
 
 
-def parse_item(ctx, resolver):
+def parse_item(ctx, resolver, debug = True):
 	topic = parse_topic(ctx.Topic())
 	resolver.add_topic(topic)
-	# print("TOPIC", topic, "\n")
+	if debug: print("TOPIC", topic, "\n")
 
 	authors = list(parse_authors(ctx.Author()))
 	resolver.add_authors(authors)
-	# print("AUTHORS", authors, "\n")
+	if debug: print("AUTHORS", authors, "\n")
 
 	article = parse_article(ctx.Article())
-	# print("ARTICLE", article, "\n")
+	if debug: print("ARTICLE", article, "\n")
 
 	authorsRef = list(parse_authorsRef(ctx.AuthorsRef()))
-	# print("AUTHORS REF", authorsRef, list(resolver.deref_authors(authorsRef)), "\n")
-	authors = resolver.resolve_authors(authors, authorsRef)
-	# print("AUTHORS RESOLVED", authors, "\n")
+	if debug: print("AUTHORS REF", authorsRef, list(resolver.deref_authors(authorsRef)), "\n")
+	# authors = resolver.resolve_authors(authors, authorsRef)
+	# if debug: print("AUTHORS RESOLVED", authors, "\n")
 
 	topicRef = parse_topicRef(ctx.TopicRef())
-	# print("TOPIC REF", topicRef, resolver.deref_topic(topicRef), "\n")
-	topic = resolver.resolve_topic(topic, topicRef)
-	# print("TOPIC RESOLVED", topic, "\n")
+	if debug: print("TOPIC REF", topicRef, resolver.deref_topic(topicRef), "\n")
+	# topic = resolver.resolve_topic(topic, topicRef)
+	# if debug: print("TOPIC RESOLVED", topic, "\n")
 
-	# print()
-	# print_item((topic, authors, article))
+	if debug: print_item((topic, authors, article))
 
-	# print("-" * 79)
-	return (topic, authors, article)
+	if debug: print("-" * 79)
+	return (topic, authors, article, authorsRef, topicRef)
 
 
 def print_item(item):
@@ -166,6 +165,7 @@ class Resolver:
 		merger = Merger("name")
 		merger.add(authors)
 		resolved = list(self.deref_author(ref) for ref in refs)
+		print(authors, refs, resolved)
 		merger.add(resolved)
 		return merger.get()
 
@@ -183,7 +183,18 @@ class Listener(weforumListener):
 		self.items = []
 		self.resolver = Resolver()
 
+	def resolve_all(self, debug = True):
+		for item in self.items:
+			topic, authors, article, authorsRef, topicRef = item
+
+			authors = self.resolver.resolve_authors(authors, authorsRef)
+			if debug: print("AUTHORS RESOLVED", authors, "\n")
+
+			topic = self.resolver.resolve_topic(topic, topicRef)
+			if debug: print("TOPIC RESOLVED", topic, "\n")
+
 	def exitArticle(self, ctx):
+		# print(type(ctx))
 		# print(dir(ctx))
 		# print(ctx.toStringTree())
 		# print(ctx.children)
@@ -210,17 +221,44 @@ def genatom(items, file=sys.stdout):
 	file.write('</feed>')
 
 
-def parse(text):
+def parse_items(text):
 	input = InputStream(text)
 	lexer = weforumLexer(input)
 	stream = CommonTokenStream(lexer)
 	parser = weforumParser(stream)
 	tree = parser.start()
 	# print(tree.toStringTree(recog=parser))
+
 	listener = Listener()
 	walker = ParseTreeWalker()
 	walker.walk(listener, tree)
 
+	listener.resolve_all()
+
+	return listener.items
+
+
+def parse(text):
+	# input = InputStream(text)
+	# lexer = weforumLexer(input)
+	# stream = CommonTokenStream(lexer)
+	# parser = weforumParser(stream)
+	# tree = parser.start()
+	# print(tree.toStringTree(recog=parser))
+
+	# listener = Listener()
+	# walker = ParseTreeWalker()
+	# walker.walk(listener, tree)
+
 	buffer = io.StringIO()
-	genatom(listener.items, buffer)
+	# genatom(listener.items, buffer)
+	genatom(parse_items(text), buffer)
 	return buffer.getvalue()
+
+
+if __name__ == '__main__':
+	with open('.cache/weforum.text') as file:
+		# print(parse(file.read()))
+		for item in parse_items(file.read()):
+			print(item)
+
