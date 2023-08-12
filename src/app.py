@@ -9,6 +9,8 @@ from lib.fetch import fetch
 from lib.Store import Store, LOCAL_STORE_ROOT
 
 
+QUERIES = False
+
 OFFLINE = False
 REPARSE = False
 REFETCH = False
@@ -46,12 +48,6 @@ else:
 
 	def serve(text, ctype = "text/xml", encoding = "utf-8"):
 		return Response(200, {"content-type": ctype}, bytes(text, encoding))
-
-
-def is_dev():
-	with open('spin.toml') as file:
-		m = re.search('^name\s*=\s*".+?-dev"', file.read(), re.M)
-		return not not m
 
 
 def reset_store(parser):
@@ -124,7 +120,7 @@ def handle_request(request):
 
 	# print(route, query)
 
-	if is_dev():
+	if QUERIES:
 		args = parse_query(query)
 		print(route, args)
 		if 'reset' in args:

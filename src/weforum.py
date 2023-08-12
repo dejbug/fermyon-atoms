@@ -1,6 +1,7 @@
 import sys, re, json, io, datetime, collections
 
-from lib.utils import xml_escape
+from lib.utils import ( collapse_whitespace, xml_escape, json_get,
+	get_version_from_manifest )
 
 class Error(Exception): pass
 class ParseError(Error): pass
@@ -31,24 +32,6 @@ def extract_json(text):
 			pass
 
 
-def json_get(data, *aa):
-	for i, a in enumerate(aa):
-		if not data:
-			return None
-		elif isinstance(data, list):
-			return [json_get(item, *aa[i:]) for item in data]
-		elif a not in data:
-			return None
-		else:
-			data = data[a]
-	# return data
-	return data.strip() if isinstance(data, str) else data
-
-
-def normalize_name(text):
-	return re.sub(r'[ \t]+', ' ', text).strip()
-
-
 # def merge_descriptions(article):
 # 	s = ""
 # 	if article.ecap: s += article.ecap
@@ -64,20 +47,13 @@ def print_article_as_atom(article, file=sys.stdout):
 	file.write(f'\t<id>{article.url}</id>\n')
 	for author in article.arefs:
 		file.write('\t<contributor>\n')
-		file.write(f'\t\t<name>{normalize_name(author.name)}</name>\n')
+		file.write(f'\t\t<name>{collapse_whitespace(author.name)}</name>\n')
 		file.write('\t</contributor>\n')
 	if article.ecap:
 		file.write(f'\t<summary>{xml_escape(article.ecap)}</summary>\n')
 	if article.description:
 		file.write(f'\t<content>{xml_escape(article.description)}</content>\n')
 	file.write('</entry>\n')
-
-
-def get_version_from_manifest():
-	with open('spin.toml') as file:
-		m = re.search(r'^version\s*=\s*"(.+?)"', file.read(), re.M)
-		if not m: return ""
-		return m.group(1)
 
 
 def genatom(articles, file=sys.stdout):
@@ -165,12 +141,6 @@ def parse_articles(text):
 		# print()
 
 
-def parse(text):
-	buffer = io.StringIO()
-	genatom(parse_articles(text), buffer)
-	return buffer.getvalue()
-
-
 def resolve_article_refs(article, sources, topics, authors):
 	id, url, title, description, ocap, ecap, sref, tref, arefs = article
 
@@ -194,29 +164,13 @@ def resolve_article_refs(article, sources, topics, authors):
 		sref, tref, _arefs)
 
 
-if __name__ == '__main__':
+def parse(text):
+	buffer = io.StringIO()
+	genatom(parse_articles(text), buffer)
+	return buffer.getvalue()
 
-	if 0:
-		data = {
-			'1':{
-				'1.1':{
-					'1.1.1':{},
-					'1.1.2':{},
-				},
-				'1.2':{
-					'1.2.1':{},
-					'1.2.2':{
-						'x':[
-							{'blah': 'a'},
-							{'blah': 'b'},
-							{'blah': 'c'},
-						]
-					},
-				}
-			}
-		}
-		print(json_get(data, '1', '1.2', '1.2.2', 'x', 'blah'))
-		exit()
+
+if __name__ == '__main__':
 
 	if 0:
 		with open('.cache/weforum.text') as file:
