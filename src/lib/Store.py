@@ -39,10 +39,10 @@ RATE = 3600
 
 class Store:
 	def __init__(self, uri, headers = HEADERS, encoding = ENCODING, backend = BACKEND):
-		prefix = self.prefix_from_uri(uri)
-		self.atom_key = prefix + ".atom"
-		self.time_key = prefix + ".time"
-		self.text_key = prefix + ".text"
+		self.prefix = self.prefix_from_uri(uri)
+		self.atom_key = self.prefix + ".atom"
+		self.time_key = self.prefix + ".time"
+		self.text_key = self.prefix + ".text"
 		self.store = backend()
 		self.encoding = encoding
 
