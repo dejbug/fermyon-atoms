@@ -16,6 +16,6 @@ PublishedAt : '"publishedAt":"' Date '"' ;
 
 ANY : . -> skip ;
 
-start  : article+ ;
+start  : Description* article+ ;
 article : Topic? Author* Article
 	(Description | PublishedAt | TopicRef | AuthorsRef )* ;

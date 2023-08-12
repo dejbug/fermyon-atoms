@@ -21,6 +21,10 @@ define deriveParserFiles
 grammars/$1/$1Lexer.py grammars/$1/$1Listener.py grammars/$1/$1Parser.py
 endef
 
+define runPygrun
+cd grammars/$(1) && $(PYGRUN) -e utf8 $(1) start --tokens ../../.cache/$(1).text
+endef
+
 define createPygrunOutputFile
 $(eval TARGET = $(notdir $1))
 $(eval NAME = $(basename $(TARGET)))
@@ -68,7 +72,13 @@ $(DIR_TEMP) : ; @mkdir .temp
 %.out : $(DIR_TEMP) ; $(call createPygrunOutputFile,$@)
 
 
-# Tests
+# Simple Tests
+
+test_weforum : $(WEFORUM_PARSER_FILES) ; $(call runPygrun,weforum)
+test_weforum_python : $(WEFORUM_PARSER_FILES) ; @python weforum.py
+
+
+# Other Tests
 
 SED_weforum='s/.*"id":"([0-9]+)","*__typename":"([^"]+)"(,"(name|title|url)":"([^"]+)")?(,"(title|url)":"([^"]+)")?.*/  ID | \1\nTYPE | \2\nARG1 | \5\nARG2 | \8\n/p'
 

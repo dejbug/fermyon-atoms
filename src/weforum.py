@@ -1,18 +1,11 @@
-import sys, re, io, datetime, collections
-
-from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
-from grammars.weforum.weforumLexer import weforumLexer
-from grammars.weforum.weforumParser import weforumParser
-from grammars.weforum.weforumListener import weforumListener
-
-# We have to do this otherwise we get a strange error:
-#	OSError: [Errno 8] Bad file descriptor: '/1/antlr4'
-# See: antlr4.ErrorStrategy.sync
-# See: antlr4.atn.ATN.nextTokensInContext
-# This might be a Python version issue.
-from antlr4 import LL1Analyzer
+import sys, re, json, io, datetime, collections
 
 from lib.utils import xml_escape
+
+class Error(Exception): pass
+class ParseError(Error): pass
+
+VERSION = "0.4.0"
 
 
 URL = "https://www.weforum.org/agenda/feed"
@@ -24,184 +17,65 @@ COPYRIGHT = "Copyright 2023 World Economic Forum"
 HEADERS = {}
 
 
+Source = collections.namedtuple("Source", "id name")
 Topic = collections.namedtuple("Topic", "id title url")
 Author = collections.namedtuple("Author", "id name")
-Article = collections.namedtuple("Article", "id url title")
+Article = collections.namedtuple("Article", "id url title description ocap ecap sref tref arefs")
 Ref = collections.namedtuple("Ref", "id")
 
 
+def extract_json(text):
+	m = re.search("window\.__APOLLO_STATE__\['.*?']=(\{\"Topic:.+?}]}}});", text, re.S)
+	if m:
+		try:
+			return json.loads(m.group(1))
+		except json.decoder.JSONDecodeError:
+			pass
+
+
+def json_get(data, *aa):
+	for i, a in enumerate(aa):
+		if not data:
+			return None
+		elif isinstance(data, list):
+			return [json_get(item, *aa[i:]) for item in data]
+		elif a not in data:
+			return None
+		else:
+			data = data[a]
+	# return data
+	return data.strip() if isinstance(data, str) else data
+
+
 def normalize_name(text):
-	return re.sub(r'[ \t]+', ' ', text)
+	return re.sub(r'[ \t]+', ' ', text).strip()
 
 
-def parse_topic(topic):
-	if not topic: return topic
-	m = re.search(r'"id":"(\d+)".*?,"title":"(.+?)","url":"(.+?)"', topic.getText(), re.S)
-	if m: return Topic(*m.groups())
-
-def parse_authors(authors):
-	if not authors: return authors
-	for author in authors:
-		yield parse_author(author)
-
-def parse_author(author):
-	if not author: return author
-	m = re.search(r'"id":"(\d+)".*?,"name":"(.+?)"', author.getText(), re.S)
-	if m: return Author(m.group(1), normalize_name(m.group(2)))
-
-def parse_article(article):
-	if not article: return article
-	m = re.search(r'"id":"(\d+)".*?,"url":"(.+?)","title":"(.+?)"', article.getText(), re.S)
-	if m: return Article(*m.groups())
-
-def parse_authorsRef(authorsRef):
-	if not authorsRef: return authorsRef
-	for x in re.finditer(r'"Author:(\d+)"', authorsRef.getText(), re.S):
-		yield Ref(*x.groups())
-
-def parse_topicRef(topicRef):
-	if not topicRef: return topicRef
-	for x in re.finditer(r'"Topic:(\d+)"', topicRef.getText(), re.S):
-		return Ref(*x.groups())
+# def merge_descriptions(article):
+# 	s = ""
+# 	if article.ecap: s += article.ecap
+# 	if article.description: s += " / " + article.description
+# 	return s
 
 
-def parse_item(ctx, resolver, debug = True):
-	topic = parse_topic(ctx.Topic())
-	resolver.add_topic(topic)
-	if debug: print("TOPIC", topic, "\n")
-
-	authors = list(parse_authors(ctx.Author()))
-	resolver.add_authors(authors)
-	if debug: print("AUTHORS", authors, "\n")
-
-	article = parse_article(ctx.Article())
-	if debug: print("ARTICLE", article, "\n")
-
-	authorsRef = list(parse_authorsRef(ctx.AuthorsRef()))
-	if debug: print("AUTHORS REF", authorsRef, list(resolver.deref_authors(authorsRef)), "\n")
-	# authors = resolver.resolve_authors(authors, authorsRef)
-	# if debug: print("AUTHORS RESOLVED", authors, "\n")
-
-	topicRef = parse_topicRef(ctx.TopicRef())
-	if debug: print("TOPIC REF", topicRef, resolver.deref_topic(topicRef), "\n")
-	# topic = resolver.resolve_topic(topic, topicRef)
-	# if debug: print("TOPIC RESOLVED", topic, "\n")
-
-	if debug: print_item((topic, authors, article))
-
-	if debug: print("-" * 79)
-	return (topic, authors, article, authorsRef, topicRef)
-
-
-def print_item(item):
-	topic, authors, article = item
-	print(topic.title)
-	print(article.title)
-	print(article.url)
-	for author in authors:
-		print(author.name)
-	print()
-
-
-def print_item_as_atom(item, file=sys.stdout):
-	topic, authors, article = item
+def print_article_as_atom(article, file=sys.stdout):
 	file.write('<entry>\n')
-	file.write(f'\t<category term="{topic.url}" label="{topic.title}"/>\n')
+	file.write(f'\t<category term="{article.tref.url}" label="{article.tref.title}"/>\n')
 	file.write(f'\t<title>{xml_escape(article.title)}</title>\n')
 	file.write(f'\t<link href="{article.url}"/>\n')
 	file.write(f'\t<id>{article.url}</id>\n')
-	for author in authors:
+	for author in article.arefs:
 		file.write('\t<contributor>\n')
-		file.write(f'\t\t<name>{author.name}</name>\n')
+		file.write(f'\t\t<name>{normalize_name(author.name)}</name>\n')
 		file.write('\t</contributor>\n')
+	if article.ecap:
+		file.write(f'\t<summary>{article.ecap}</summary>\n')
+	if article.description:
+		file.write(f'\t<content{article.description}</content>\n')
 	file.write('</entry>\n')
 
 
-class Merger:
-	def __init__(self, key):
-		self.key = key
-		self.mapping = {}
-
-	def add(self, items):
-		for item in items:
-			self.mapping[getattr(item, self.key)] = item
-
-	def get(self):
-		return self.mapping.values()
-
-
-class Resolver:
-	def __init__(self):
-		self.authors = []
-		self.topics = []
-
-	def add_author(self, author):
-		self.authors.append(author)
-
-	def add_authors(self, authors):
-		for author in authors:
-			if author:
-				self.add_author(author)
-
-	def add_topic(self, topic):
-		if topic:
-			self.topics.append(topic)
-
-	def deref_author(self, ref):
-		for author in self.authors:
-			if author.id == ref.id:
-				return author
-
-	def deref_authors(self, refs):
-		for ref in refs:
-			yield self.deref_author(ref)
-
-	def deref_topic(self, ref):
-		for topic in self.topics:
-			if topic.id == ref.id:
-				return topic
-
-	def resolve_authors(self, authors, refs):
-		merger = Merger("name")
-		merger.add(authors)
-		resolved = list(self.deref_author(ref) for ref in refs)
-		print(authors, refs, resolved)
-		merger.add(resolved)
-		return merger.get()
-
-	def resolve_topic(self, topic, ref):
-		if topic:
-			if ref:
-				assert topic.id == ref.id
-			return topic
-		elif ref:
-			return self.deref_topic(ref)
-
-
-class Listener(weforumListener):
-	def __init__(self):
-		self.items = []
-		self.resolver = Resolver()
-
-	def resolve_all(self, debug = True):
-		for item in self.items:
-			topic, authors, article, authorsRef, topicRef = item
-
-			authors = self.resolver.resolve_authors(authors, authorsRef)
-			if debug: print("AUTHORS RESOLVED", authors, "\n")
-
-			topic = self.resolver.resolve_topic(topic, topicRef)
-			if debug: print("TOPIC RESOLVED", topic, "\n")
-
-	def exitArticle(self, ctx):
-		# print(type(ctx))
-		# print(dir(ctx))
-		# print(ctx.toStringTree())
-		# print(ctx.children)
-		self.items.append(parse_item(ctx, self.resolver))
-
-
-def genatom(items, file=sys.stdout):
+def genatom(articles, file=sys.stdout):
 	dt = datetime.datetime.now(datetime.timezone.utc)
 	updated = f'<updated>{dt:%Y-%m-%dT%H:%M:%S}Z</updated>'
 
@@ -216,49 +90,132 @@ def genatom(items, file=sys.stdout):
 	file.write('\t</author>\n')
 	file.write(f'\t<rights>{COPYRIGHT}</rights>\n')
 	file.write(f'\t<id>{URL}</id>\n')
-	for item in items:
-		print_item_as_atom(item, file=file)
+	file.write(f'\t<generator uri="https://atoms.fermyon.app" version="{VERSION}">\n')
+	file.write(f'\t\tWhere is my complimentary Fermyon T-Shirt? -- Dejan\n')
+	file.write(f'\t</generator>\n')
+	for article in articles:
+		print_article_as_atom(article, file=file)
 	file.write('</feed>')
 
 
+def parse_ref(text):
+	if text:
+		return text.split(':')[1]
+
+
+def parse_author_refs(texts):
+	if texts:
+		aa = []
+		for text in texts:
+			aa.append(parse_ref(text))
+		return aa
+
+
 def parse_items(text):
-	input = InputStream(text)
-	lexer = weforumLexer(input)
-	stream = CommonTokenStream(lexer)
-	parser = weforumParser(stream)
-	tree = parser.start()
-	# print(tree.toStringTree(recog=parser))
+	data = extract_json(text)
+	if data:
+		for key, item in data.items():
+			t = item['__typename']
+			if t == 'Topic':
+				yield Topic(item['id'], item['title'], item['url'])
+			elif t == 'Author':
+				yield Author(item['id'], item['name'])
+			elif t == 'Article':
+				ocap = json_get(item, 'featuredImage', 'table', 'original_caption')
+				ecap = json_get(item, 'featuredImage', 'table', 'edited_caption')
+				sref = parse_ref(json_get(item, 'source', '__ref'))
+				tref = parse_ref(json_get(item, 'topic', '__ref'))
+				arefs = parse_author_refs(json_get(item, 'authors', '__ref'))
+				yield Article(item['id'], item['url'], item['title'],
+					item['description'], ocap, ecap, sref, tref, arefs)
+			elif t == 'Source':
+				yield Source(item['id'], item['name'])
+			elif t == 'Query': continue
+			else:
+				# import pprint
+				# pprint.pprint(item)
+				print(item)
+				raise ParseError(f'unknown item type {t}')
 
-	listener = Listener()
-	walker = ParseTreeWalker()
-	walker.walk(listener, tree)
 
-	listener.resolve_all()
+def parse_articles(text):
+	sources = {}
+	topics = {}
+	authors = {}
 
-	return listener.items
+	for item in parse_items(text):
+		if isinstance(item, Source):
+			sources[item.id] = item
+		elif isinstance(item, Topic):
+			topics[item.id] = item
+		elif isinstance(item, Author):
+			authors[item.id] = item
+		elif isinstance(item, Article):
+			item = resolve_article_refs(item, sources, topics, authors)
+			yield item
+		# print(item)
+		# print()
 
 
 def parse(text):
-	# input = InputStream(text)
-	# lexer = weforumLexer(input)
-	# stream = CommonTokenStream(lexer)
-	# parser = weforumParser(stream)
-	# tree = parser.start()
-	# print(tree.toStringTree(recog=parser))
-
-	# listener = Listener()
-	# walker = ParseTreeWalker()
-	# walker.walk(listener, tree)
-
 	buffer = io.StringIO()
-	# genatom(listener.items, buffer)
-	genatom(parse_items(text), buffer)
+	genatom(parse_articles(text), buffer)
 	return buffer.getvalue()
 
 
-if __name__ == '__main__':
-	with open('.cache/weforum.text') as file:
-		# print(parse(file.read()))
-		for item in parse_items(file.read()):
-			print(item)
+def resolve_article_refs(article, sources, topics, authors):
+	id, url, title, description, ocap, ecap, sref, tref, arefs = article
 
+	_arefs = []
+
+	if sref:
+		if sref in sources:
+			# print('RESOLVED', sources[sref])
+			sref = sources[sref]
+	if tref:
+		if tref in topics:
+			# print('RESOLVED', topics[tref])
+			tref = topics[tref]
+	if arefs:
+		for aref in arefs:
+			if aref in authors:
+				# print('RESOLVED', authors[aref])
+				_arefs.append(authors[aref])
+
+	return Article(id, url, title, description, ocap, ecap,
+		sref, tref, _arefs)
+
+
+if __name__ == '__main__':
+
+	if 0:
+		data = {
+			'1':{
+				'1.1':{
+					'1.1.1':{},
+					'1.1.2':{},
+				},
+				'1.2':{
+					'1.2.1':{},
+					'1.2.2':{
+						'x':[
+							{'blah': 'a'},
+							{'blah': 'b'},
+							{'blah': 'c'},
+						]
+					},
+				}
+			}
+		}
+		print(json_get(data, '1', '1.2', '1.2.2', 'x', 'blah'))
+		exit()
+
+	if 0:
+		with open('.cache/weforum.text') as file:
+			for item in parse_articles(file.read()):
+				print(item)
+				print()
+
+	if 1:
+		with open('.cache/weforum.text') as file:
+			print(parse(file.read()))
