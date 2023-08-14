@@ -10,6 +10,7 @@ id = "app"
 source = "app.wasm"
 environment = { RATE = "3600" }
 key_value_stores = [ "default" ]
+# sqlite_databases = ["default"]
 allowed_http_hosts = [
 	"https://www.ibtimes.com",
 	"https://www.aldaily.com",
