@@ -1,0 +1,134 @@
+#!/bin/bash
+
+options="abc:d"
+
+for c in `echo $options | tr -d ':'`; do
+	echo $c
+done
+
+
+exit
+
+
+optA=0
+optB=0
+optC=0
+optD=0
+
+while getopts 'abc:d' option; do
+	# echo $? $option $OPTARG
+	case "${option}" in
+		a) optA=1 ;;
+		b) optB=1 ;;
+		c) optC="${OPTARG}" ;;
+		d) optD=1 ;;
+	esac
+done
+
+echo "$optA" / "$optB" / "$optC" / "$optD"
+
+shift $(( ${OPTIND} - 1 ))
+echo "$*"
+
+
+exit
+
+
+# echo $(getopt -s bash -n 'run' -o 'abc:d' -l 'alpha,beta,gamma:,delta' "$@")
+
+# IFS=$'\n'
+for i in `seq 9`; do
+	echo $i $1 // "$*"
+	shift
+done
+
+
+exit
+
+
+exit
+
+
+opts=$(getopt -s bash -n 'run' -o 'abc:d' -l 'alpha,beta,gamma:,delta' "$@")
+echo $opts
+
+for arg in $opts; do
+	# if [[ $arg  =~ ^\'.+\'$ ]]; then
+	# if [[ $arg  =~ ^\'.+[^\']$ ]]; then
+	if [[ $arg  =~ ^[^\'].+\'$ ]]; then
+		echo $arg
+	fi
+done
+
+
+exit
+
+opts=$(getopt -not-u -s bash -n 'run' -o 'abc:d' -l 'alpha,beta,gamma:,delta' "$@")
+echo $opts
+
+IFS=' '
+for arg in $opts; do
+	echo $arg
+done
+
+buildParserForGrammar() {
+	echo antlr4 -o grammars/$1 -Dlanguage=Python3 $1.g4
+}
+
+exit
+
+if [[ $1 = "build" ]]; then
+	if [[ $2 = "grammar" ]]; then
+		if [[ $3 = "weforum" ]]; then
+			buildParserForGrammar $3
+		fi
+		if [[ $3 = "linkedin" ]]; then
+			buildParserForGrammar $3
+		fi
+	fi
+fi
+
+
+
+
+exit
+
+
+echo $_
+echo $$
+echo $BASHOPTS
+echo $BASH_ARGC
+echo ${BASH_ARGV[-1]}
+echo ${BASH_ARGV[-2]}
+echo ${BASH_ARGV[-3]}
+echo ${BASH_ARGV[-4]}
+echo ${BASH_ARGV[-5]}
+echo ${BASH_ARGV[-6]}
+echo ${BASH_ARGV[-7]}
+
+for i in `seq $BASH_ARGC`; do
+	echo ${BASH_ARGV[-$i]}
+done
+
+
+exit
+
+
+IFS=':'
+echo "$*"
+opts="$*"
+echo $opts
+echo "$opts"
+
+
+exit
+
+
+
+IFS='|'
+# echo "$*"
+for arg in $*; do
+	echo $arg
+done
+
+
