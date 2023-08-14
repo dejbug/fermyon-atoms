@@ -1,0 +1,48 @@
+#!/bin/bash
+
+db1=.spin/sqlite_key_value.db
+db2=.spin/sqlite_db.db
+tab1=spin_key_value
+
+listDatabases() {
+	ls -1 .spin/*.db
+}
+
+printSchemas() {
+	for name in `listDatabases`; do
+		echo $name
+		sqlite3 $name '.schema'
+	done
+}
+
+listKeys() {
+	sqlite3 $db1 "SELECT key FROM $tab1"
+}
+
+listTables() {
+	q='.tables'
+	[[ $1 -eq 1 && -f $db1 ]] && sqlite3 $db1 "$q"
+	[[ $1 -eq 2 && -f $db2 ]] && sqlite3 $db2 "$q"
+}
+
+listKeysByPattern() {
+	sqlite3 $db1 "SELECT key FROM $tab1 WHERE key LIKE '$1'"
+}
+
+usage() {
+	printf "$0 [ d | s | k | p / kp | t NUM ]\n"
+	printf "    d : list databases\n"
+	printf "    s : list schemas\n"
+	printf "    k : list keys (in key-value store)\n"
+	printf "    p : list keys (in key-value store) by %%-pattern\n"
+	printf "    t : list tables in NUM (1 : key-value store, 2 : sqlite)\n"
+}
+
+case $1 in
+	d) listDatabases ;;
+	s) printSchemas ;;
+	k) listKeys ;;
+	p|kp) listKeysByPattern $2 ;;
+	t) listTables $2 ;;
+	*) usage ;;
+esac
