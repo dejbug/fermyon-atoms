@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# echo ${#@}
+
+# echo ${1^^*}
+# echo ${1@U}
+# echo ${1^*}
+# echo ${1@u}
+
+# echo ${1@Q}
+
+# echo ${@%.gawk}
+# echo ${@%%.*}
+# exit
+
+runGawk() {
+	grammarName="${1%%.*}" # strip extension(s)
+
+	case $2 in
+		o|out|output|c|cooked) gawk -f "$1" -- ".temp/$grammarName.out" ;;
+		t|text|r|raw) gawk -f "$1" -- ".cache/$grammarName.text" ;;
+		*) echo "Cooked or raw?" ;;
+	esac
+}
+
+runPython() {
+	echo "PYTHON" "$@"
+}
+
+runGrammar() {
+	echo "GRAMMAR" "$@"
+}
+
+if [[ "$1" =~ .*\.gawk ]]; then
+	runGawk "$@"
+elif [[ "$1" =~ .*\.py ]]; then
+	# echo "PYTHON"
+	shift
+	runPython "$@"
+elif [[ -n "$1" && -e "grammars/$1/" ]]; then
+	# echo "GRAMMAR"
+	shift
+	runGrammar "$@"
+else
+	echo Invalid input: Need gawk or python file or grammar name.
+fi
+
+exit
+
+printArgs() {
+	for arg in "$@"; do
+		echo $arg
+	done
+}
+
+runGawkOnText() {
+	[[ -n "$1" ]] && gawk -f $1.gawk -- .cache/$1.text || echo "Which grammar?"
+}
+
+runGawkOnOutput() {
+	[[ -n "$1" ]] && gawk -f $1.gawk -- .temp/$1.out || echo "Which grammar?"
+}
+
+runGawk() {
+	arg="$1"; shift
+	case $arg in
+		p) printArgs "$@" ;;
+		text|raw) runGawkOnText "$@" ;;
+		out|cooked) runGawkOnOutput "$@" ;;
+		*) echo No such gawk command. ;;
+	esac
+}
+
+arg="$1"; shift
+case $arg in
+	p) printArgs "$@" ;;
+	gawk|awk) runGawk "$@" ;;
+	*) echo No such command. ;;
+esac

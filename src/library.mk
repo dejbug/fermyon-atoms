@@ -57,7 +57,8 @@ endef
 # test_weforum : $(call deriveParserFiles,weforum) ; $(call runPygrun,weforum)
 # test_weforum_python : $(call deriveParserFiles,weforum) ; @python weforum.py
 define writeSimpleTests
-test_$1 : $(call deriveParserFiles,$1) ; $(call runPygrun,$1)
+.PHONY : test_$1 test_$1_python
+test_$1_pygrun : $(call deriveParserFiles,$1) ; $(call runPygrun,$1)
 test_$1_python : $(call deriveParserFiles,$1) ; @python $1.py
 endef
 
